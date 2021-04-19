@@ -4,7 +4,12 @@ import datetime as dt
 from .forms import NewArticleForm, NewsLetterForm
 from .models import Article,NewsLetterRecipients
 from .email import send_welcome_email
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, authenticate, logout
+from django.views.generic import View
 
 
 # Create your views here.
@@ -25,18 +30,17 @@ def convert_dates(dates):
 def news_today(request):
     date = dt.date.today()
     news = Article.todays_news()
-    if request.method == 'POST':
-        form = NewsLetterForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data['your_name']
-            email = form.cleaned_data['email']
-            recipient = NewsLetterRecipients(name = name,email =email)
-            recipient.save()
-            send_welcome_email(name,email)
-            HttpResponseRedirect('news_today')
-    else:
-        form = NewsLetterForm()
+    form = NewsLetterForm()
     return render(request, 'all-news/today-news.html', {"date": date,"news":news,"letterForm":form})
+def newsletter(request):
+    name = request.POST.get('your_name')
+    email = request.POST.get('email')
+
+    recipient = NewsLetterRecipients(name=name, email=email)
+    recipient.save()
+    send_welcome_email(name, email)
+    data = {'success': 'You have been successfully added to mailing list'}
+    return JsonResponse(data)
 
 def past_days_news(request, past_date):
     try:
@@ -80,8 +84,20 @@ def new_article(request):
             article = form.save(commit=False)
             article.editor = current_user
             article.save()
-        return redirect('NewsToday')
-
+        return redirect('/')
     else:
         form = NewArticleForm()
     return render(request, 'new_article.html', {"form": form})
+def logout_request(request):
+	logout(request)
+	return redirect("/")
+@method_decorator([login_required], name='dispatch')
+class HomeView(View):
+    model = User
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('accounts/login')
+        else:
+            return redirect('/') #needs defined as valid url
+        return super(HomeView, self).dispatch(request, *args, **kwargs)

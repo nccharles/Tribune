@@ -19,9 +19,9 @@ from django.contrib.auth import views
 from django_registration.backends.one_step.views import RegistrationView
 
 urlpatterns = [
-    path(r'^logout/$', views.LogoutView, {"next_page": '/'}), 
     path(r'^admin/', admin.site.urls),
     path(r'',include('news.urls')),
+    path('accounts/loginhere/', views.LoginView.as_view(success_url='/'),name='registration_register'),
     path('accounts/register/',
         RegistrationView.as_view(success_url='/'),
         name='django_registration_register'),
