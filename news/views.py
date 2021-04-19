@@ -4,13 +4,9 @@ import datetime as dt
 from .forms import NewArticleForm, NewsLetterForm
 from .models import Article,NewsLetterRecipients
 from .email import send_welcome_email
-from django.contrib.auth.models import User
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
-from django.views.generic import View
-
 
 # Create your views here.
 def welcome(request):
@@ -91,13 +87,3 @@ def new_article(request):
 def logout_request(request):
 	logout(request)
 	return redirect("/")
-@method_decorator([login_required], name='dispatch')
-class HomeView(View):
-    model = User
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('accounts/login')
-        else:
-            return redirect('/') #needs defined as valid url
-        return super(HomeView, self).dispatch(request, *args, **kwargs)
