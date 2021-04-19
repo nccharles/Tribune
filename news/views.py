@@ -2,7 +2,10 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse, Http404,HttpResponseRedirect
 import datetime as dt
 from .forms import NewArticleForm, NewsLetterForm
-from .models import Article,NewsLetterRecipients
+from .models import Article,NewsLetterRecipients,MoringaMerch
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializer import MerchSerializer
 from .email import send_welcome_email
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -84,6 +87,14 @@ def new_article(request):
     else:
         form = NewArticleForm()
     return render(request, 'new_article.html', {"form": form})
+
+class MerchList(APIView):
+    def get(self, request, format=None):
+        all_merch = MoringaMerch.objects.all()
+        serializers = MerchSerializer(all_merch, many=True)
+        return Response(serializers.data)
+
+# logout request
 def logout_request(request):
 	logout(request)
 	return redirect("/")
